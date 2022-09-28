@@ -13,20 +13,17 @@ export async function init(options?: Partial<InitOptions>) {
 
     if(!idLen) {
         idLen = {
-            length: 20,
-            lengthVariance: 0
+            length: 20
         }
     }
 
     if(!bd.endsWith("/") && !bd.endsWith("\\")) {
-        // console.log("appending back", bd.endsWith("/"))
         bd = bd + "/";
     }
 
     const baseDir = new FileClass(bd);
     if (!(await baseDir.exists())) {
         await baseDir.mkDirs();
-        console.log("made dirs")
     }
 
     
@@ -45,7 +42,6 @@ interface InitOptions {
     baseDirectory: string;
 
     id: {
-        length: number,
-        lengthVariance: number
+        length: number
     }
 }

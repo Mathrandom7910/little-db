@@ -7,6 +7,14 @@
     "build": "npx tsc",
     "test": "npx nodemon ./examples/test.ts"
   },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/Mathrandom7910/little-db.git"
+  },
+  "bugs": {
+    "url": "https://github.com/Mathrandom7910/little-db/issues"
+  },
+  "homepage": "https://github.com/Mathrandom7910/little-db#readme",
   "keywords": [],
   "author": "",
   "license": "ISC",

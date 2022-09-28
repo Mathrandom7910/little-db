@@ -1,2 +1,3 @@
 import { init } from "./init";
-export = init;
+import { AbstractParser, IParser } from "./parser/parser";
+export { init, IParser, AbstractParser };
