@@ -130,18 +130,6 @@ export function entry<T, K = Partial<T>>(bd: string, name: string, idLen: number
         }
 
         static async all() {
-            // const fDir = `${this.baseDir}${this.dbName}/`;
-            // const fileDir = new File(fDir);
-
-            // const walkRes = await fileDir.walk();
-
-            // const entries: DBEntry<T>[] = [];
-            // for(const file of walkRes) {
-            //     const entry = await this.findById(file.split(".json")[0]);
-            //     if(entry == null) continue;
-            //     entries.push(entry);
-            // }
-            // return entries;
             const entries: DBEntry<T>[] = [];
             await this.iter((entry) => {
                 entries.push(entry);

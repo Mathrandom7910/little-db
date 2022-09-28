@@ -2,7 +2,7 @@
   "name": "@mathrandom7910/little-db",
   "version": "1.0.0",
   "description": "",
-  "main": "./js/index.js",
+  "main": "./build/index.js",
   "scripts": {
     "build": "npx tsc",
     "test": "npx nodemon ./examples/test.ts"
