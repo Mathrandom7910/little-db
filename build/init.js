@@ -3,7 +3,7 @@ Object.defineProperty(exports, "__esModule", { value: true });
 exports.init = void 0;
 const filec_1 = require("filec");
 const db_1 = require("./db");
-async function init(options) {
+function init(options) {
     options ??= {};
     var bd = options.baseDirectory;
     var idLen = options.id;
@@ -19,9 +19,11 @@ async function init(options) {
         bd = bd + "/";
     }
     const baseDir = new filec_1.FileClass(bd);
-    if (!(await baseDir.exists())) {
-        await baseDir.mkDirs();
-    }
+    baseDir.exists()
+        .then((exists) => {
+        if (!exists)
+            baseDir.mkDirs();
+    });
     return {
         entry: (name, defaultData) => {
             return (0, db_1.entry)(bd, name, idLen.length, defaultData);

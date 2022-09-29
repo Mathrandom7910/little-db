@@ -1,5 +1,5 @@
 import { FileClass } from "filec";
-export declare function init(options?: Partial<InitOptions>): Promise<{
+export declare function init(options?: Partial<InitOptions>): {
     entry: <T>(name: string, defaultData?: Partial<T> | undefined) => {
         new (data?: Partial<T> | undefined): {
             file: FileClass;
@@ -23,7 +23,7 @@ export declare function init(options?: Partial<InitOptions>): Promise<{
         find(propCol: string, val: any, max?: number): Promise<import("./db").DBEntry<T>[]>;
         findOne(propCol: string, val: any): Promise<import("./db").DBEntry<T>>;
     };
-}>;
+};
 interface InitOptions {
     /**
      * The base directory for data to be stored

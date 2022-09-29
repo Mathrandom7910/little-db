@@ -2,7 +2,7 @@ import { FileClass } from "filec";
 import { entry } from "./db";
 
 
-export async function init(options?: Partial<InitOptions>) {
+export function init(options?: Partial<InitOptions>) {
     options ??= {};
     var bd = options.baseDirectory;
     var idLen = options.id;
@@ -22,9 +22,10 @@ export async function init(options?: Partial<InitOptions>) {
     }
 
     const baseDir = new FileClass(bd);
-    if (!(await baseDir.exists())) {
-        await baseDir.mkDirs();
-    }
+    baseDir.exists()
+    .then((exists) => {
+        if(!exists) baseDir.mkDirs();
+    });
 
     
 
