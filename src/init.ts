@@ -1,48 +1,69 @@
+import EventEmitter from "@mathrandom7910/tseventemitter";
 import { FileClass } from "filec";
 import { entry } from "./db";
+import { InitOptions } from "./initopts";
+import { DefaultParser } from "./parser/parser";
 
+interface IRMap {
+    ready: void;
+}
+
+class InitResult extends EventEmitter<IRMap> {
+    constructor(public opts: InitOptions) {
+        super();
+    }
+    
+    /**
+     * Creates an entry. `Note that the object properties aren't known at runtime, therefore they will be undefined when the entry is first created (unless default data is given).`
+     * @param name Name of the Entry to return, this is how it will appear in the local directory.
+     * @param defaultData 
+     * @returns 
+     */
+    
+    entry<T>(name: string, defaultData?: Partial<T>) {
+        return entry<T>(this.opts, name, defaultData);
+    }
+}
+
+/**
+ * Initialization function. `Note this function should only be called once`.
+ * @param options Options to initialize.
+ * @returns Initialization result with methods to manage the database.
+ */
 
 export function init(options?: Partial<InitOptions>) {
     options ??= {};
-    var bd = options.baseDirectory;
-    var idLen = options.id;
 
-    if (!bd) {
-        bd = "./little-db/data/";
+    if (!options.baseDirectory) {
+        options.baseDirectory = "./little-db/data/";
     }
 
-    if(!idLen) {
-        idLen = {
+    if(!options.id) {
+        options.id = {
             length: 20
         }
     }
 
-    if(!bd.endsWith("/") && !bd.endsWith("\\")) {
-        bd = bd + "/";
+    if(!options.baseDirectory.endsWith("/") && !options.baseDirectory.endsWith("\\")) {
+        options.baseDirectory += "/";
     }
 
-    const baseDir = new FileClass(bd);
+    if(!options.parser) {
+        options.parser = new DefaultParser();
+    }
+
+    if(!options.Filec) {
+        options.Filec = FileClass;
+    }
+
+    const baseDir = new FileClass(options.baseDirectory);
     baseDir.exists()
     .then((exists) => {
         if(!exists) baseDir.mkDirs();
     });
 
     
-
-    return {
-        entry: <T>(name: string, defaultData?: Partial<T>) => {
-            return entry<T>(bd!, name, idLen!.length, defaultData);
-        }
-    }
-}
-
-interface InitOptions {
-    /**
-     * The base directory for data to be stored
-     */
-    baseDirectory: string;
-
-    id: {
-        length: number
-    }
+    const ir = new InitResult(options as InitOptions);
+    ir.entry = ir.entry.bind(ir);
+    return ir;
 }

@@ -1,5 +1,6 @@
-import { FileClass as File } from "filec"
+import { FileClass } from "filec"
 import { BulkFileWriter } from "filec/js/writer";
+import { InitOptions } from "./initopts";
 
 const chars = "qwertyuiopasdfghjklzxcvbnm1234567890";
 
@@ -13,7 +14,7 @@ function randCharSeq(len: number) {
 }
 
 export class DBEntry<T> {
-    file!: File;
+    file!: FileClass;
     data: {
         id: string
     } & T;
@@ -25,27 +26,32 @@ export class DBEntry<T> {
 
     #df;
     #dfExists: Promise<boolean> | null;
+    #iop;
 
-    fileExists = false;
+    /**
+     * Directory entry name, modifying this WILL cause issues
+     */
+    den!: string;
 
-    constructor(bd: string, name: string, idLen: number) {
-
+    constructor(iOp: InitOptions, name: string) {
+        this.#iop = iOp;
         this.data = {
             id: ""
         } as any;
 
-        this.data.id = randCharSeq(idLen);
+        this.data.id = randCharSeq(iOp.id.length);
 
-        const dirEntryName = `${bd}${name}`;
-        const dirFile = new File(dirEntryName);
+        const dirEntryName = `${iOp.baseDirectory}${name}`;
+        const dirFile = new iOp.Filec(dirEntryName);
         this.#df = dirFile;
         this.#dfExists = dirFile.exists();
 
-        this.setFile(dirEntryName)
+        this.setFile(dirEntryName);
     }
 
     setFile(dEN: string) {
-        this.file = new File(`${dEN}/${this.data.id}.json`);
+        this.den = dEN;
+        this.file = new this.#iop.Filec(`${dEN}/${this.data.id}.json`);
         this.#bw = this.file.writer().bulkWriter();
     }
 
@@ -54,8 +60,9 @@ export class DBEntry<T> {
     }
 
     async save() {
+        console.log("saving", this.data);
         await this.#checkExists();
-        await this.#bw.write(JSON.stringify(this.data));
+        await this.#bw.write(this.#iop.parser.toStorage(this.data));
     }
 
 
@@ -74,28 +81,28 @@ export class DBEntry<T> {
     }
 }
 
-export function entry<T, K = Partial<T>>(bd: string, name: string, idLen: number, defaultData?: K) {
+export function entry<T, K = Partial<T>>(initOps: InitOptions, name: string, defaultData?: K) {
     return class extends DBEntry<T> {
         constructor(data?: K) {
-            super(bd, name, idLen);
+            super(initOps, name);
 
             if(data) {
                 this.data = data as any;
             }
         }
 
-        static override baseDir = bd;
+        static override baseDir = initOps.baseDirectory;
         static override dbName = name;
 
         static async findById(id: string) {
-            const file = new File(`${this.baseDir}${this.dbName}/${id}.json`);
+            const file = new initOps.Filec(`${this.baseDir}${this.dbName}/${id}.json`);
 
             if (!(await file.exists())) {
                 return null;
             }
 
-            const parsed = JSON.parse(await file.reader().read("utf-8"));
-            const entry = new DBEntry<T>(bd, name, idLen);
+            const parsed = initOps.parser.fromStorage(await file.reader().read("utf-8"));
+            const entry = new DBEntry<T>(initOps, name);
 
             if (defaultData) {
                 for (let i in defaultData) {
@@ -104,15 +111,17 @@ export function entry<T, K = Partial<T>>(bd: string, name: string, idLen: number
             }
 
             for (let i in parsed) {
-                (entry.data as any)[i] = parsed[i];
+                (entry.data as any)[i] = (parsed as any)[i];
             }
+
+            entry.setFile(entry.den);
 
             return entry;
         }
 
         static async iter(cb: (entry: DBEntry<T>, cancel: () => void) => any) {
             const fDir = `${this.baseDir}${this.dbName}/`;
-            const fileDir = new File(fDir);
+            const fileDir = new initOps.Filec(fDir);
 
             const walkRes = await fileDir.walk();
 
@@ -192,8 +201,8 @@ export function entry<T, K = Partial<T>>(bd: string, name: string, idLen: number
             return entries;
         }
 
-        static async findOne(propCol: string, val: any) {
-            return (await this.find(propCol, val, 1))[0];
+        static async findOne(propCol: string, val: any): Promise<DBEntry<T> | null> {
+            return (await this.find(propCol, val, 1))[0] || null;
         }
     }
 }

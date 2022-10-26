@@ -10,14 +10,19 @@ interface UserData {
 
 async function begin() {
     // console.log("b");
-    const { entry } = await init();
+    const { entry } = init();
+    
 
     const User = entry<UserData>("user");
 
-    const users = await User.find("info.age", 25);
-    console.log(users)
+    const user = (await User.findOne("info.age", 25))!;
+    console.log(user);
+    if(user == null) return;
+
+    user.data.info.age = 20;
+    await user.save();
 }
 
 begin().then(() => {
-    // console.log("done")
+    console.log("done")
 })

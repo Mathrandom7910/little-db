@@ -1,7 +1,6 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.entry = exports.DBEntry = void 0;
-const filec_1 = require("filec");
 const chars = "qwertyuiopasdfghjklzxcvbnm1234567890";
 function randCharSeq(len) {
     var seq = "";
@@ -18,28 +17,35 @@ class DBEntry {
     #bw;
     #df;
     #dfExists;
-    fileExists = false;
-    constructor(bd, name, idLen) {
+    #iop;
+    /**
+     * Directory entry name, modifying this WILL cause issues
+     */
+    den;
+    constructor(iOp, name) {
+        this.#iop = iOp;
         this.data = {
             id: ""
         };
-        this.data.id = randCharSeq(idLen);
-        const dirEntryName = `${bd}${name}`;
-        const dirFile = new filec_1.FileClass(dirEntryName);
+        this.data.id = randCharSeq(iOp.id.length);
+        const dirEntryName = `${iOp.baseDirectory}${name}`;
+        const dirFile = new iOp.Filec(dirEntryName);
         this.#df = dirFile;
         this.#dfExists = dirFile.exists();
         this.setFile(dirEntryName);
     }
     setFile(dEN) {
-        this.file = new filec_1.FileClass(`${dEN}/${this.data.id}.json`);
+        this.den = dEN;
+        this.file = new this.#iop.Filec(`${dEN}/${this.data.id}.json`);
         this.#bw = this.file.writer().bulkWriter();
     }
     put(key, value) {
         this.data[key] = value;
     }
     async save() {
+        console.log("saving", this.data);
         await this.#checkExists();
-        await this.#bw.write(JSON.stringify(this.data));
+        await this.#bw.write(this.#iop.parser.toStorage(this.data));
     }
     async #checkExists() {
         if (this.#dfExists == null) {
@@ -54,23 +60,23 @@ class DBEntry {
     }
 }
 exports.DBEntry = DBEntry;
-function entry(bd, name, idLen, defaultData) {
+function entry(initOps, name, defaultData) {
     return class extends DBEntry {
         constructor(data) {
-            super(bd, name, idLen);
+            super(initOps, name);
             if (data) {
                 this.data = data;
             }
         }
-        static baseDir = bd;
+        static baseDir = initOps.baseDirectory;
         static dbName = name;
         static async findById(id) {
-            const file = new filec_1.FileClass(`${this.baseDir}${this.dbName}/${id}.json`);
+            const file = new initOps.Filec(`${this.baseDir}${this.dbName}/${id}.json`);
             if (!(await file.exists())) {
                 return null;
             }
-            const parsed = JSON.parse(await file.reader().read("utf-8"));
-            const entry = new DBEntry(bd, name, idLen);
+            const parsed = initOps.parser.fromStorage(await file.reader().read("utf-8"));
+            const entry = new DBEntry(initOps, name);
             if (defaultData) {
                 for (let i in defaultData) {
                     entry.data[i] = defaultData[i];
@@ -79,11 +85,12 @@ function entry(bd, name, idLen, defaultData) {
             for (let i in parsed) {
                 entry.data[i] = parsed[i];
             }
+            entry.setFile(entry.den);
             return entry;
         }
         static async iter(cb) {
             const fDir = `${this.baseDir}${this.dbName}/`;
-            const fileDir = new filec_1.FileClass(fDir);
+            const fileDir = new initOps.Filec(fDir);
             const walkRes = await fileDir.walk();
             var cancelled = false;
             function cancel() {
@@ -150,7 +157,7 @@ function entry(bd, name, idLen, defaultData) {
             return entries;
         }
         static async findOne(propCol, val) {
-            return (await this.find(propCol, val, 1))[0];
+            return (await this.find(propCol, val, 1))[0] || null;
         }
     };
 }

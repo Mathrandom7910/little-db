@@ -1,29 +1,37 @@
-import { FileClass as File } from "filec";
+import { FileClass } from "filec";
 import { BulkFileWriter } from "filec/js/writer";
+import { InitOptions } from "./initopts";
 export declare class DBEntry<T> {
     #private;
-    file: File;
+    file: FileClass;
     data: {
         id: string;
     } & T;
     static baseDir: string;
     static dbName: string;
-    fileExists: boolean;
-    constructor(bd: string, name: string, idLen: number);
+    /**
+     * Directory entry name, modifying this WILL cause issues
+     */
+    den: string;
+    constructor(iOp: InitOptions, name: string);
     setFile(dEN: string): void;
     put<K extends keyof T>(key: K, value: T[K]): void;
     save(): Promise<void>;
 }
-export declare function entry<T, K = Partial<T>>(bd: string, name: string, idLen: number, defaultData?: K): {
+export declare function entry<T, K = Partial<T>>(initOps: InitOptions, name: string, defaultData?: K): {
     new (data?: K): {
-        file: File;
+        file: FileClass;
         data: {
             id: string;
         } & T;
         "__#2@#bw": BulkFileWriter;
-        "__#2@#df": File;
+        "__#2@#df": FileClass;
         "__#2@#dfExists": Promise<boolean> | null;
-        fileExists: boolean;
+        "__#2@#iop": InitOptions;
+        /**
+         * Directory entry name, modifying this WILL cause issues
+         */
+        den: string;
         setFile(dEN: string): void;
         put<K_1 extends keyof T>(key: K_1, value: T[K_1]): void;
         save(): Promise<void>;
@@ -35,5 +43,5 @@ export declare function entry<T, K = Partial<T>>(bd: string, name: string, idLen
     iter(cb: (entry: DBEntry<T>, cancel: () => void) => any): Promise<void>;
     all(): Promise<DBEntry<T>[]>;
     find(propCol: string, val: any, max?: number): Promise<DBEntry<T>[]>;
-    findOne(propCol: string, val: any): Promise<DBEntry<T>>;
+    findOne(propCol: string, val: any): Promise<DBEntry<T> | null>;
 };
