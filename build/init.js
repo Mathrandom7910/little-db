@@ -49,10 +49,13 @@ function init(options) {
         options.Filec = filec_1.FileClass;
     }
     const baseDir = new filec_1.FileClass(options.baseDirectory);
-    baseDir.exists()
-        .then((exists) => {
-        if (!exists)
-            baseDir.mkDirs();
+    baseDir
+        .exists()
+        .then(async (exists) => {
+        if (!exists) {
+            await baseDir.mkDirs();
+        }
+        ir.emit("ready", ir);
     });
     const ir = new InitResult(options);
     ir.entry = ir.entry.bind(ir);

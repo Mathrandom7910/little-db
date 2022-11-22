@@ -5,7 +5,7 @@ import { InitOptions } from "./initopts";
 import { DefaultParser } from "./parser/parser";
 
 interface IRMap {
-    ready: void;
+    ready: InitResult;
 }
 
 class InitResult extends EventEmitter<IRMap> {
@@ -57,9 +57,13 @@ export function init(options?: Partial<InitOptions>) {
     }
 
     const baseDir = new FileClass(options.baseDirectory);
-    baseDir.exists()
-    .then((exists) => {
-        if(!exists) baseDir.mkDirs();
+    baseDir
+    .exists()
+    .then(async (exists) => {
+        if(!exists){
+            await baseDir.mkDirs();
+        }
+        ir.emit("ready", ir);
     });
 
     

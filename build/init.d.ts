@@ -2,7 +2,7 @@ import EventEmitter from "@mathrandom7910/tseventemitter";
 import { FileClass } from "filec";
 import { InitOptions } from "./initopts";
 interface IRMap {
-    ready: void;
+    ready: InitResult;
 }
 declare class InitResult extends EventEmitter<IRMap> {
     opts: InitOptions;
