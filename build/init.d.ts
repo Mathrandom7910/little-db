@@ -19,12 +19,11 @@ declare class InitResult extends EventEmitter<IRMap> {
             data: {
                 id: string;
             } & T;
-            "__#2@#bw": import("filec").BulkFileWriter;
             "__#2@#df": FileClass;
             "__#2@#dfExists": Promise<boolean> | null;
             "__#2@#iop": InitOptions;
-            den: string;
-            setFile(dEN: string): void;
+            "__#2@#den": string;
+            setFile(): void;
             put<K extends keyof T>(key: K, value: T[K]): void;
             save(): Promise<void>;
             "__#2@#checkExists"(): Promise<void>;

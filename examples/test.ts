@@ -10,16 +10,24 @@ interface UserData {
 
 async function begin() {
     // console.log("b");
-    const { entry } = init();
-    
+    const res = init();
 
-    const User = entry<UserData>("user");
+    await res.wait("ready");
 
-    const user = (await User.findOne("info.age", 25))!;
-    console.log(user);
-    if(user == null) return;
+    const User = res.entry<UserData>("user");
+    console.log("finding user")
+    const user = (await User.findOne("userName", "joe"));
+    console.log(user?.data.id);
+    if(user == null) {
+        const newUser = new User();
 
-    user.data.info.age = 20;
+        newUser.data.userName = "joe";
+        newUser.save();
+        return;
+    }
+
+    user.data.info.age = 22;
+    console.log("saving user")
     await user.save();
 }
 

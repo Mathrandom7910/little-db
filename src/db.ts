@@ -1,5 +1,4 @@
 import { FileClass } from "filec"
-import { BulkFileWriter } from "filec/js/writer";
 import { InitOptions } from "./initopts";
 
 const chars = "qwertyuiopasdfghjklzxcvbnm1234567890";
@@ -22,8 +21,6 @@ export class DBEntry<T> {
     static baseDir: string;
     static dbName: string;
 
-    #bw!: BulkFileWriter;
-
     #df;
     #dfExists: Promise<boolean> | null;
     #iop;
@@ -31,28 +28,24 @@ export class DBEntry<T> {
     /**
      * Directory entry name, modifying this WILL cause issues
      */
-    den!: string;
+    #den!: string;
 
     constructor(iOp: InitOptions, name: string) {
         this.#iop = iOp;
         this.data = {
-            id: ""
+            id: randCharSeq(iOp.id.length)
         } as any;
 
-        this.data.id = randCharSeq(iOp.id.length);
-
-        const dirEntryName = `${iOp.baseDirectory}${name}`;
-        const dirFile = new iOp.Filec(dirEntryName);
+        this.#den = `${iOp.baseDirectory}${name}`;
+        const dirFile = new iOp.Filec(this.#den);
         this.#df = dirFile;
         this.#dfExists = dirFile.exists();
 
-        this.setFile(dirEntryName);
+        this.setFile();
     }
 
-    setFile(dEN: string) {
-        this.den = dEN;
-        this.file = new this.#iop.Filec(`${dEN}/${this.data.id}.json`);
-        this.#bw = this.file.writer().bulkWriter();
+    setFile() {
+        this.file = new this.#iop.Filec(`${this.#den}/${this.data.id}.json`);
     }
 
     put<K extends keyof T>(key: K, value: T[K]) {
@@ -61,7 +54,7 @@ export class DBEntry<T> {
 
     async save() {
         await this.#checkExists();
-        await this.#bw.write(this.#iop.parser.toStorage(this.data));
+        await this.file.writer().bulkWriter().write(this.#iop.parser.toStorage(this.data));
     }
 
 
@@ -81,6 +74,17 @@ export class DBEntry<T> {
 }
 
 export function entry<T, K = Partial<T>>(initOps: InitOptions, name: string, defaultData?: K) {
+    var madeDirs = false;
+    async function mkDirs() {
+        if (madeDirs) return;
+
+        const dir = new initOps.Filec(`${initOps.baseDirectory}${name}`);
+        if (!await dir.exists()) {
+            await dir.mkDirs();
+        }
+        madeDirs = true;
+    }
+
     return class extends DBEntry<T> {
         constructor(data?: K) {
             super(initOps, name);
@@ -94,6 +98,7 @@ export function entry<T, K = Partial<T>>(initOps: InitOptions, name: string, def
         static override dbName = name;
 
         static async findById(id: string) {
+            await mkDirs();
             const file = new initOps.Filec(`${this.baseDir}${this.dbName}/${id}.json`);
 
             if (!(await file.exists())) {
@@ -113,12 +118,13 @@ export function entry<T, K = Partial<T>>(initOps: InitOptions, name: string, def
                 (entry.data as any)[i] = (parsed as any)[i];
             }
 
-            entry.setFile(entry.den);
+            entry.setFile();
 
             return entry;
         }
 
         static async iter(cb: (entry: DBEntry<T>, cancel: () => void) => any) {
+            await mkDirs();
             const fDir = `${this.baseDir}${this.dbName}/`;
             const fileDir = new initOps.Filec(fDir);
 

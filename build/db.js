@@ -14,37 +14,33 @@ class DBEntry {
     data;
     static baseDir;
     static dbName;
-    #bw;
     #df;
     #dfExists;
     #iop;
     /**
      * Directory entry name, modifying this WILL cause issues
      */
-    den;
+    #den;
     constructor(iOp, name) {
         this.#iop = iOp;
         this.data = {
-            id: ""
+            id: randCharSeq(iOp.id.length)
         };
-        this.data.id = randCharSeq(iOp.id.length);
-        const dirEntryName = `${iOp.baseDirectory}${name}`;
-        const dirFile = new iOp.Filec(dirEntryName);
+        this.#den = `${iOp.baseDirectory}${name}`;
+        const dirFile = new iOp.Filec(this.#den);
         this.#df = dirFile;
         this.#dfExists = dirFile.exists();
-        this.setFile(dirEntryName);
+        this.setFile();
     }
-    setFile(dEN) {
-        this.den = dEN;
-        this.file = new this.#iop.Filec(`${dEN}/${this.data.id}.json`);
-        this.#bw = this.file.writer().bulkWriter();
+    setFile() {
+        this.file = new this.#iop.Filec(`${this.#den}/${this.data.id}.json`);
     }
     put(key, value) {
         this.data[key] = value;
     }
     async save() {
         await this.#checkExists();
-        await this.#bw.write(this.#iop.parser.toStorage(this.data));
+        await this.file.writer().bulkWriter().write(this.#iop.parser.toStorage(this.data));
     }
     async #checkExists() {
         if (this.#dfExists == null) {
@@ -60,6 +56,16 @@ class DBEntry {
 }
 exports.DBEntry = DBEntry;
 function entry(initOps, name, defaultData) {
+    var madeDirs = false;
+    async function mkDirs() {
+        if (madeDirs)
+            return;
+        const dir = new initOps.Filec(`${initOps.baseDirectory}${name}`);
+        if (!await dir.exists()) {
+            await dir.mkDirs();
+        }
+        madeDirs = true;
+    }
     return class extends DBEntry {
         constructor(data) {
             super(initOps, name);
@@ -70,6 +76,7 @@ function entry(initOps, name, defaultData) {
         static baseDir = initOps.baseDirectory;
         static dbName = name;
         static async findById(id) {
+            await mkDirs();
             const file = new initOps.Filec(`${this.baseDir}${this.dbName}/${id}.json`);
             if (!(await file.exists())) {
                 return null;
@@ -84,10 +91,11 @@ function entry(initOps, name, defaultData) {
             for (let i in parsed) {
                 entry.data[i] = parsed[i];
             }
-            entry.setFile(entry.den);
+            entry.setFile();
             return entry;
         }
         static async iter(cb) {
+            await mkDirs();
             const fDir = `${this.baseDir}${this.dbName}/`;
             const fileDir = new initOps.Filec(fDir);
             const walkRes = await fileDir.walk();
