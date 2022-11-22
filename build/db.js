@@ -43,7 +43,6 @@ class DBEntry {
         this.data[key] = value;
     }
     async save() {
-        console.log("saving", this.data);
         await this.#checkExists();
         await this.#bw.write(this.#iop.parser.toStorage(this.data));
     }
