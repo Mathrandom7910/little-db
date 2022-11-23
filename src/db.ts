@@ -89,8 +89,10 @@ export function entry<T, K = Partial<T>>(initOps: InitOptions, name: string, def
         constructor(data?: K) {
             super(initOps, name);
 
-            if(data) {
-                this.data = data as any;
+            if (data) {
+                for (let i in data) {
+                    (this.data as any)[i] = data[i];
+                }
             }
         }
 

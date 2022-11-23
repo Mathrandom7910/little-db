@@ -70,7 +70,9 @@ function entry(initOps, name, defaultData) {
         constructor(data) {
             super(initOps, name);
             if (data) {
-                this.data = data;
+                for (let i in data) {
+                    this.data[i] = data[i];
+                }
             }
         }
         static baseDir = initOps.baseDirectory;
