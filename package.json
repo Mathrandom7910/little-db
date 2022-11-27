@@ -5,7 +5,7 @@
   "main": "./build/index.js",
   "scripts": {
     "build": "npx tsc",
-    "test": "npx nodemon ./examples/test.ts"
+    "test": "npx nodemon ./examples/test.ts --ignore ./little-db/"
   },
   "repository": {
     "type": "git",

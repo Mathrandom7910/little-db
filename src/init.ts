@@ -1,14 +1,17 @@
 import EventEmitter from "@mathrandom7910/tseventemitter";
 import { FileClass } from "filec";
 import { entry } from "./db";
+import { DBConfig } from "./dbconfig";
 import { InitOptions } from "./initopts";
 import { DefaultParser } from "./parser/parser";
 
-interface IRMap {
-    ready: InitResult;
+interface IRMap<T> {
+    ready: InitResult<T>;
 }
 
-class InitResult extends EventEmitter<IRMap> {
+class InitResult<ConfigMap> extends EventEmitter<IRMap<ConfigMap>> {
+    private dbCfg: DBConfig<ConfigMap> | null = null;
+
     constructor(public opts: InitOptions) {
         super();
     }
@@ -23,6 +26,19 @@ class InitResult extends EventEmitter<IRMap> {
     entry<T>(name: string, defaultData?: Partial<T>) {
         return entry<T>(this.opts, name, defaultData);
     }
+
+    async config(defaultData?: Partial<ConfigMap>) {
+        if(this.dbCfg) return this.dbCfg;
+        const Config = this.entry("little-db-config", defaultData);
+        const defaultIdCfg = await Config.findById("cfg");
+        if(defaultIdCfg == null) {
+            const cfg = new Config();
+            cfg.data.id = "cfg";
+            await cfg.save();
+            return this.dbCfg = new DBConfig(cfg);
+        }
+        return this.dbCfg = new DBConfig(defaultIdCfg);
+    }
 }
 
 /**
@@ -31,7 +47,7 @@ class InitResult extends EventEmitter<IRMap> {
  * @returns Initialization result with methods to manage the database.
  */
 
-export function init(options?: Partial<InitOptions>) {
+export function init<T = any>(options?: Partial<InitOptions>) {
     options ??= {};
 
     if (!options.baseDirectory) {
@@ -67,7 +83,7 @@ export function init(options?: Partial<InitOptions>) {
     });
 
     
-    const ir = new InitResult(options as InitOptions);
+    const ir = new InitResult<T>(options as InitOptions);
     ir.entry = ir.entry.bind(ir);
     return ir;
 }

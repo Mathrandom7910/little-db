@@ -7,9 +7,11 @@ exports.init = void 0;
 const tseventemitter_1 = __importDefault(require("@mathrandom7910/tseventemitter"));
 const filec_1 = require("filec");
 const db_1 = require("./db");
+const dbconfig_1 = require("./dbconfig");
 const parser_1 = require("./parser/parser");
 class InitResult extends tseventemitter_1.default {
     opts;
+    dbCfg = null;
     constructor(opts) {
         super();
         this.opts = opts;
@@ -22,6 +24,19 @@ class InitResult extends tseventemitter_1.default {
      */
     entry(name, defaultData) {
         return (0, db_1.entry)(this.opts, name, defaultData);
+    }
+    async config(defaultData) {
+        if (this.dbCfg)
+            return this.dbCfg;
+        const Config = this.entry("little-db-config", defaultData);
+        const defaultIdCfg = await Config.findById("cfg");
+        if (defaultIdCfg == null) {
+            const cfg = new Config();
+            cfg.data.id = "cfg";
+            await cfg.save();
+            return this.dbCfg = new dbconfig_1.DBConfig(cfg);
+        }
+        return this.dbCfg = new dbconfig_1.DBConfig(defaultIdCfg);
     }
 }
 /**

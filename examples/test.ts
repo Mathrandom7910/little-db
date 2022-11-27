@@ -1,5 +1,5 @@
-import { AES, enc } from "crypto-js";
-import { AbstractParser, init } from "../src/index";
+// import { AES, enc } from "crypto-js";
+import { init } from "../src/index";
 
 interface UserData {
     userName: string,
@@ -9,25 +9,40 @@ interface UserData {
     }
 }
 
-class EncryptionParser implements AbstractParser {
-    toStorage(data: {}): string | Buffer {
-        return AES.encrypt(JSON.stringify(data), "testkey").toString();
-    }
+// class EncryptionParser implements AbstractParser {
+//     toStorage(data: {}): string | Buffer {
+//         return AES.encrypt(JSON.stringify(data), "testkey").toString();
+//     }
 
-    fromStorage(data: string | Buffer): {} {
-        if(typeof data != "string") {
-            data = data.toString("utf-8");
-        }
+//     fromStorage(data: string | Buffer): {} {
+//         if(typeof data != "string") {
+//             data = data.toString("utf-8");
+//         }
 
-        return JSON.parse(AES.decrypt(data, "testkey").toString(enc.Utf8));
-    }
+//         return JSON.parse(AES.decrypt(data, "testkey").toString(enc.Utf8));
+//     }
+// }
+
+interface ConfigData {
+    someConf: string,
+    confBool: boolean
 }
 
 async function begin() {
     // console.log("b");
-    const res = init({ parser: new EncryptionParser() });
-
+    const res = init<ConfigData>();
     await res.wait("ready");
+
+    const cfg = await res.config();
+
+    console.log(cfg.data);
+
+    cfg.data.someConf = "hello";
+    cfg.data.confBool = false;
+    // cfg
+    await cfg.save();
+
+
 
     const User = res.entry<UserData>("user");
     console.log("finding user")
@@ -38,6 +53,7 @@ async function begin() {
 
         newUser.data.userName = "joe";
         newUser.save();
+        // newUser.delete();
         return;
     }
 

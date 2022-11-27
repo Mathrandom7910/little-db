@@ -24,6 +24,7 @@ export class DBEntry<T> {
     #df;
     #dfExists: Promise<boolean> | null;
     #iop;
+    #oldId: string;
 
     /**
      * Directory entry name, modifying this WILL cause issues
@@ -40,6 +41,7 @@ export class DBEntry<T> {
         const dirFile = new iOp.Filec(this.#den);
         this.#df = dirFile;
         this.#dfExists = dirFile.exists();
+        this.#oldId = this.data.id;
 
         this.setFile();
     }
@@ -52,7 +54,15 @@ export class DBEntry<T> {
         (this.data as any)[key] = value;
     }
 
+    get<K extends keyof T>(key: K) {
+        return this.data[key];
+    }
+
     async save() {
+        if(this.#oldId != this.data.id) {
+            this.setFile();
+        }
+        
         await this.#checkExists();
         await this.file.writer().bulkWriter().write(this.#iop.parser.toStorage(this.data));
     }
@@ -70,6 +80,11 @@ export class DBEntry<T> {
         }
 
         await this.#df.mkDirs();
+    }
+
+    async delete() {
+        this.file.delete();
+        return this;
     }
 }
 
@@ -210,6 +225,19 @@ export function entry<T, K = Partial<T>>(initOps: InitOptions, name: string, def
 
         static async findOne(propCol: string, val: any): Promise<DBEntry<T> | null> {
             return (await this.find(propCol, val, 1))[0] || null;
+        }
+
+        static async findOneAndDelete(propCol: string, val: any) {
+            return (await this.findOne(propCol, val))?.delete();
+        }
+
+        static async findAndDelete(propCol: string, val: any) {
+            const all = await this.find(propCol, val);
+            const entries: DBEntry<T>[] = [];
+            for(const entry of all) {
+                entries.push(await entry.delete());
+            }
+            return entries;
         }
     }
 }

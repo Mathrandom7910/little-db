@@ -17,6 +17,7 @@ class DBEntry {
     #df;
     #dfExists;
     #iop;
+    #oldId;
     /**
      * Directory entry name, modifying this WILL cause issues
      */
@@ -30,6 +31,7 @@ class DBEntry {
         const dirFile = new iOp.Filec(this.#den);
         this.#df = dirFile;
         this.#dfExists = dirFile.exists();
+        this.#oldId = this.data.id;
         this.setFile();
     }
     setFile() {
@@ -38,7 +40,13 @@ class DBEntry {
     put(key, value) {
         this.data[key] = value;
     }
+    get(key) {
+        return this.data[key];
+    }
     async save() {
+        if (this.#oldId != this.data.id) {
+            this.setFile();
+        }
         await this.#checkExists();
         await this.file.writer().bulkWriter().write(this.#iop.parser.toStorage(this.data));
     }
@@ -52,6 +60,10 @@ class DBEntry {
             return;
         }
         await this.#df.mkDirs();
+    }
+    async delete() {
+        this.file.delete();
+        return this;
     }
 }
 exports.DBEntry = DBEntry;
@@ -167,6 +179,17 @@ function entry(initOps, name, defaultData) {
         }
         static async findOne(propCol, val) {
             return (await this.find(propCol, val, 1))[0] || null;
+        }
+        static async findOneAndDelete(propCol, val) {
+            return (await this.findOne(propCol, val))?.delete();
+        }
+        static async findAndDelete(propCol, val) {
+            const all = await this.find(propCol, val);
+            const entries = [];
+            for (const entry of all) {
+                entries.push(await entry.delete());
+            }
+            return entries;
         }
     };
 }
