@@ -89,6 +89,11 @@ function entry(initOps, name, defaultData) {
         }
         static baseDir = initOps.baseDirectory;
         static dbName = name;
+        /**
+         * Finds an entry by the given id with an o(1) time complexity
+         * @param id Id of the entry to find
+         * @returns Found entry with the id that matches the given id, or null if none are found
+         */
         static async findById(id) {
             await mkDirs();
             const file = new initOps.Filec(`${this.baseDir}${this.dbName}/${id}.json`);

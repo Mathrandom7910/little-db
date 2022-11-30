@@ -33,7 +33,7 @@ async function begin() {
     const res = init<ConfigData>();
     await res.wait("ready");
 
-    const cfg = await res.config();
+    const cfg = await res.config({someConf: "a diff str"});
 
     console.log(cfg.data);
 

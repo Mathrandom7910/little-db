@@ -114,6 +114,12 @@ export function entry<T, K = Partial<T>>(initOps: InitOptions, name: string, def
         static override baseDir = initOps.baseDirectory;
         static override dbName = name;
 
+        /**
+         * Finds an entry by the given id with an o(1) time complexity
+         * @param id Id of the entry to find
+         * @returns Found entry with the id that matches the given id, or null if none are found
+         */
+
         static async findById(id: string) {
             await mkDirs();
             const file = new initOps.Filec(`${this.baseDir}${this.dbName}/${id}.json`);

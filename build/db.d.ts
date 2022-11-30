@@ -42,6 +42,11 @@ export declare function entry<T, K = Partial<T>>(initOps: InitOptions, name: str
     };
     baseDir: string;
     dbName: string;
+    /**
+     * Finds an entry by the given id with an o(1) time complexity
+     * @param id Id of the entry to find
+     * @returns Found entry with the id that matches the given id, or null if none are found
+     */
     findById(id: string): Promise<DBEntry<T> | null>;
     iter(cb: (entry: DBEntry<T>, cancel: () => void) => any): Promise<void>;
     all(): Promise<DBEntry<T>[]>;
