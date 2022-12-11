@@ -7,10 +7,6 @@ export interface InitOptions {
      */
     baseDirectory: string;
 
-    id: {
-        length: number
-    };
-
     parser: AbstractParser;
 
     Filec: typeof FileClass;

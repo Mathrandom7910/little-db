@@ -54,12 +54,6 @@ export function init<T = any>(options?: Partial<InitOptions>) {
         options.baseDirectory = "./little-db/data/";
     }
 
-    if(!options.id) {
-        options.id = {
-            length: 20
-        }
-    }
-
     if(!options.baseDirectory.endsWith("/") && !options.baseDirectory.endsWith("\\")) {
         options.baseDirectory += "/";
     }

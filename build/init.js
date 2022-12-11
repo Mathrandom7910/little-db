@@ -49,11 +49,6 @@ function init(options) {
     if (!options.baseDirectory) {
         options.baseDirectory = "./little-db/data/";
     }
-    if (!options.id) {
-        options.id = {
-            length: 20
-        };
-    }
     if (!options.baseDirectory.endsWith("/") && !options.baseDirectory.endsWith("\\")) {
         options.baseDirectory += "/";
     }

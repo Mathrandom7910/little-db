@@ -1,14 +1,10 @@
 "use strict";
+var __importDefault = (this && this.__importDefault) || function (mod) {
+    return (mod && mod.__esModule) ? mod : { "default": mod };
+};
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.entry = exports.DBEntry = void 0;
-const chars = "qwertyuiopasdfghjklzxcvbnm1234567890";
-function randCharSeq(len) {
-    var seq = "";
-    for (let i = 0; i < len; i++) {
-        seq += chars[Math.floor(Math.random() * chars.length)][Math.random() < .5 ? "toLowerCase" : "toUpperCase"]();
-    }
-    return seq;
-}
+const uuid_random_1 = __importDefault(require("uuid-random"));
 class DBEntry {
     file;
     data;
@@ -25,7 +21,7 @@ class DBEntry {
     constructor(iOp, name) {
         this.#iop = iOp;
         this.data = {
-            id: randCharSeq(iOp.id.length)
+            id: (0, uuid_random_1.default)()
         };
         this.#den = `${iOp.baseDirectory}${name}`;
         const dirFile = new iOp.Filec(this.#den);

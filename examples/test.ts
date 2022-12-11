@@ -46,12 +46,12 @@ async function begin() {
 
     const User = res.entry<UserData>("user");
     console.log("finding user")
-    const user = (await User.findOne("userName", "joe"));
+    const user = (await User.findOne("userName", "joe1"));
     console.log("found", user);
     if(user == null) {
         const newUser = new User();
 
-        newUser.data.userName = "joe";
+        newUser.data.userName = "joe1";
         newUser.save();
         // newUser.delete();
         return;

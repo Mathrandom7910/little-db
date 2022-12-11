@@ -1,16 +1,6 @@
 import { FileClass } from "filec"
 import { InitOptions } from "./initopts";
-
-const chars = "qwertyuiopasdfghjklzxcvbnm1234567890";
-
-function randCharSeq(len: number) {
-    var seq = "";
-    for (let i = 0; i < len; i++) {
-        seq += chars[Math.floor(Math.random() * chars.length)][Math.random() < .5 ? "toLowerCase" : "toUpperCase"]();
-    }
-
-    return seq;
-}
+import uuid from "uuid-random";
 
 export class DBEntry<T> {
     file!: FileClass;
@@ -34,7 +24,7 @@ export class DBEntry<T> {
     constructor(iOp: InitOptions, name: string) {
         this.#iop = iOp;
         this.data = {
-            id: randCharSeq(iOp.id.length)
+            id: uuid()
         } as any;
 
         this.#den = `${iOp.baseDirectory}${name}`;
